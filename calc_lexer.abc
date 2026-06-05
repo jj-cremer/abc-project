@@ -1,7 +1,7 @@
 @ <stdio.hdr>
 @ "calc_lexer.hdr"
 
-
+// foo 42 !!111einseinself
 // -- internal: only available within this translation unit
 
 global ch: int;
