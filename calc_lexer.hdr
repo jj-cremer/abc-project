@@ -1,0 +1,30 @@
+enum TokenKind
+{
+    BAD_TOKEN,
+    EOI,
+    DECIMAL_LITERAL,
+    PLUS,
+    ASTERISK,
+    IDENTIFIER,
+    STRING_LITERAL,
+    CHARACTER_LITERAL,
+    LPAREN,
+    RPAREN,
+};
+
+type TokenVal: array[39] of char;
+
+struct Token
+{
+    kind:	TokenKind;
+    pos:	struct Pos {
+		    row, col: unsigned;
+		};
+    val:	TokenVal;
+};
+
+extern token: Token;
+
+extern fn getToken(): TokenKind;
+
+extern fn tokenKindStr(token: Token): -> char;

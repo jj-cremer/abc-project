@@ -1,0 +1,119 @@
+@ <stdio.hdr>
+@ "calc_lexer.hdr"
+
+
+// -- internal: only available within this translation unit
+
+global ch: int;
+global currentPos: Pos = {1, 0};
+global updateVal: bool;
+global lengthVal: size_t;
+
+fn isDigit(ch: int): bool
+{
+    return ch >= '0' && ch <= '9';
+}
+
+fn isLetter(ch: int): bool
+{
+    return ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z';
+}
+
+fn nextCh()
+{
+    if (updateVal) {
+	assert(lengthVal < sizeof(token.val) / sizeof(token.val[-1]));
+	token.val[lengthVal++] = ch;
+	token.val[lengthVal] = 0;
+    }
+    ch = getchar();
+    if (ch == '\n') {
+	++currentPos.row;
+	currentPos.col = 0;
+    }
+    else {
+	++currentPos.col;
+    }
+}
+
+
+
+// -- exported: available for other translation units
+
+global token: Token;
+
+fn getToken(): TokenKind
+{
+    updateVal = false;
+    lengthVal = 0;
+    while (ch == 0 || ch == ' ' || ch == '\t' || ch == '\n') {
+	nextCh();
+    }
+    token.pos = currentPos;
+    updateVal = true;
+    if (isDigit(ch)) {
+	while (isDigit(ch)) {
+	    nextCh();
+	}
+	return token.kind = DECIMAL_LITERAL;
+    } else if (ch == '+') {
+	nextCh();
+	return token.kind = PLUS;
+    } else if (ch == EOF) {
+	return token.kind = EOI;
+    } else if (ch == '*') {
+	nextCh();
+	return token.kind = ASTERISK;
+    } else if (isLetter(ch)){
+	while (isLetter(ch) || isDigit(ch)) {
+	    nextCh();
+	}
+	return token.kind = IDENTIFIER;
+    } else if (ch == '"') {
+	nextCh();
+	while (ch != '"'){
+	    nextCh();
+	}
+	nextCh();
+	return token.kind = STRING_LITERAL;
+    } else if (ch == '\'') {
+	nextCh();
+	if (ch == '\'') {
+	    return token.kind = BAD_TOKEN;
+	}
+	nextCh();
+	if (ch != '\'') {
+	    return token.kind = BAD_TOKEN;
+	}
+	nextCh();
+	return token.kind = CHARACTER_LITERAL;
+    } else if (ch == '(') {
+        nextCh();
+        return token.kind = LPAREN;
+    } else if (ch == ')') {
+        nextCh();
+        return token.kind = RPAREN;
+    } else if (ch == EOF) {
+        return token.kind = EOI;
+    } else {
+	nextCh();
+	return token.kind = BAD_TOKEN;
+    }
+}
+
+fn tokenKindStr(token: Token): -> char
+{
+    switch (token.kind) {
+	default: return "??";
+	case BAD_TOKEN: return "BAD_TOKEN";
+	case EOI: return "EOI";
+	case DECIMAL_LITERAL: return "DECIMAL_LITERAL";
+	case PLUS: return "PLUS";
+	case ASTERISK: return "ASTERISK";
+	case IDENTIFIER: return "IDENTIFIER";
+	case STRING_LITERAL: return "STRING_LITERAL";
+	case CHARACTER_LITERAL: return "CHARACTER_LITERAL";
+	case LPAREN: return "LPAREN";
+        case RPAREN: return "RPAREN";
+    }
+}

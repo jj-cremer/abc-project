@@ -1,0 +1,21 @@
+S20_R       (OP u 8) (dest u 4) (imm s 20)
+R_R_R       (OP u 8) (z u 4) (y u 4) (x u 4)
+
+0x02 R_R_R
+:   halt %x
+    ulm_halt(ulm_regVal(x));
+
+0x11 S20_R
+#   Load sign extended immediate value into destination register.
+:   load imm, %dest
+    ulm_setReg(imm, dest);
+
+0x13 R_R_R
+#   Adds register \\texttt{%x} to register and stores the result in
+#   register \\texttt{%z}.
+:   add %x, %y, %z
+    ulm_add64(ulm_regVal(x), ulm_regVal(y), z);
+
+0x17 R_R_R
+:   mul %x, %y, %z
+    ulm_mul64(ulm_regVal(x), ulm_regVal(y), z);
