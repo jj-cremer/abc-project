@@ -1,85 +1,8 @@
 @ <stdio.hdr>
 @ "lexer.hdr"
+@ "parser.hdr"
+@ "gen.hdr"
 
-fn getReg(): int
-{
-    static reg: int = 1;
-    return reg++;
-}
-
-// ---
-
-fn parseTerm(): int;
-fn parseFactor(): int;
-
-fn parseExpr(): int
-{
-    local left: int = parseTerm();
-    if (left < 0) {
-        return -1;
-    }
-    while (token.kind == PLUS) {
-        getToken();
-        local right: int = parseTerm();
-        if (right < 0) {
-            printf("%u.%u expected term\n",
-                   token.pos.row, token.pos.col);
-            assert(0);
-        }
-        local dest: int = getReg();
-        printf("\tadd %%%d, %%%d, %%%d\n", left, right, dest);
-        left = dest;
-    }
-    return left;
-}
-
-fn parseTerm(): int
-{
-    local left: int = parseFactor();
-    if (left < 0) {
-        return -1;
-    }
-    while (token.kind == ASTERISK) {
-        getToken();
-        local right: int = parseFactor();
-        if (right < 0) {
-            printf("%u.%u expected term\n",
-                   token.pos.row, token.pos.col);
-            assert(0);
-        }
-        local dest: int = getReg();
-        printf("\tmul %%%d, %%%d, %%%d\n", left, right, dest);
-        left = dest;
-    }
-    return left;
-}
-
-fn parseFactor(): int
-{
-    if (token.kind == DECIMAL_LITERAL) {
-        local reg: int = getReg();
-        printf("\tload %s, %%%d\n", token.val, reg);
-        getToken();
-        return reg;
-    } else if (token.kind == LPAREN) {
-        getToken();
-        local reg: int = parseExpr();
-        if (reg < 0) {
-            printf("%u.%u expected expression\n",
-                   token.pos.row, token.pos.col);
-            assert(0);
-        }
-        if (token.kind != RPAREN) {
-            printf("%u.%u expected ')'\n",
-                   token.pos.row, token.pos.col);
-            assert(0);
-        }
-        getToken();
-        return reg;
-    } else {
-        return -1;
-    }
-}
 
 fn main()
 {
