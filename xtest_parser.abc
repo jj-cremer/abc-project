@@ -1,5 +1,5 @@
 @ <stdio.hdr>
-@ "calc_lexer.hdr"
+@ "lexer.hdr"
 
 fn getReg(): int
 {
