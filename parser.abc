@@ -4,62 +4,61 @@
 @ "gen.hdr"
 
 
-fn parseTerm(): int;
-fn parseFactor(): int;
+fn parseTerm(): -> Expr;
+fn parseFactor(): -> Expr;
 
-fn parseExpr(): int
+fn parseExpr(): -> Expr
 {
-    local left: int = parseTerm();
-    if (left < 0) {
-        return -1;
+    local left: -> Expr = parseTerm();
+    if (!left) {
+        return nullptr;
     }
-    while (token.kind == PLUS) {
+    while (token.kind == PLUS || token.kind == MINUS) {
+	local tok: Token = token;
         getToken();
-        local right: int = parseTerm();
-        if (right < 0) {
+        local right: -> Expr = parseTerm();
+        if (!right) {
             printf("%u.%u expected term\n",
                    token.pos.row, token.pos.col);
             assert(0);
         }
-        local dest: int = getReg();
-        printf("\tadd %%%d, %%%d, %%%d\n", left, right, dest);
-        left = dest;
+	local exprKind: ExprKind = tok.kind == PLUS ? EXPR_ADD : EXPR_SUB;
+        left = createBinaryExpr(exprKind, left, right);
     }
     return left;
 }
 
-fn parseTerm(): int
+fn parseTerm(): -> Expr
 {
-    local left: int = parseFactor();
-    if (left < 0) {
-        return -1;
+    local left: -> Expr = parseFactor();
+    if (!left) {
+        return nullptr;
     }
-    while (token.kind == ASTERISK) {
+    while (token.kind == ASTERISK || token.kind == SLASH) {
+	local tok: Token = token;
         getToken();
-        local right: int = parseFactor();
-        if (right < 0) {
-            printf("%u.%u expected term\n",
+        local right: -> Expr = parseFactor();
+        if (!right) {
+            printf("%u.%u factor expected\n",
                    token.pos.row, token.pos.col);
-            assert(0);
+            return nullptr;
         }
-        local dest: int = getReg();
-        printf("\tmul %%%d, %%%d, %%%d\n", left, right, dest);
-        left = dest;
+	local exprKind: ExprKind = tok.kind == ASTERISK ? EXPR_MUL : EXPR_DIV;
+        left = createBinaryExpr(exprKind, left, right);
     }
     return left;
 }
 
-fn parseFactor(): int
+fn parseFactor(): -> Expr
 {
     if (token.kind == DECIMAL_LITERAL) {
-        local reg: int = getReg();
-        printf("\tload %s, %%%d\n", token.val, reg);
+        local reg: -> Expr = createIntegerExpr(token.val);
         getToken();
         return reg;
     } else if (token.kind == LPAREN) {
         getToken();
-        local reg: int = parseExpr();
-        if (reg < 0) {
+        local reg: -> Expr = parseExpr();
+        if (!reg) {
             printf("%u.%u expected expression\n",
                    token.pos.row, token.pos.col);
             assert(0);
@@ -72,7 +71,7 @@ fn parseFactor(): int
         getToken();
         return reg;
     } else {
-        return -1;
+        return nullptr;
     }
 }
 

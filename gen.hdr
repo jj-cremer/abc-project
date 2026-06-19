@@ -1,4 +1,23 @@
-@ <stdio.hdr>
-@ "lexer.hdr"
+type GenReg: unsigned;
 
-extern fn getReg(): int;
+extern fn genReleaseReg(reg: GenReg);
+
+extern fn genConstant(val: -> char): GenReg;
+
+enum GenInstr
+{
+    GEN_ADD,
+    GEN_SUB,
+    GEN_MUL,
+    GEN_DIV,
+};
+
+// we need to be carefull with the order soon
+extern fn genInstr(instr: GenInstr, left: GenReg, right: GenReg): GenReg;
+
+extern fn genInitCode();
+extern fn genFuncDefBegin(name: -> readonly char);
+extern fn genFuncDefEnd();
+extern fn genHalt(exitCode: GenReg);
+extern fn genReturn(retVal: GenReg);
+

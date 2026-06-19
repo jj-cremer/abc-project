@@ -1,10 +1,90 @@
 @ <stdio.hdr>
+
 @ "gen.hdr"
 
-fn getReg(): int
+global usedReg: array[16] of bool;
+
+fn getReg(): GenReg
 {
-    static reg: int = 1;
-    return reg++;
+    for (local r: GenReg = 2; r < sizeof(usedReg)/sizeof(usedReg[0]); ++r) {
+	if (!usedReg[r]) {
+	    usedReg[r] = true;
+	    return r;
+	}
+    }
+    assert(0 && "getReg: out of registers!\n");
+    return 0;
 }
 
+fn genReleaseReg(reg: GenReg)
+{
+    assert(usedReg[reg]);
+    usedReg[reg] = false;
+}
 
+fn genConstant(val: -> char): GenReg
+{
+    local reg: GenReg = getReg();
+    printf("\tload \t%s, \t%%%d\n", val, reg);
+    return reg;
+}
+
+fn genInstr(op: GenInstr, r1: GenReg, r2: GenReg): GenReg
+{
+    local reg: GenReg = getReg();
+    switch (op) {
+	case GEN_ADD: 
+	    printf("\tadd \t%%%d, \t%%%d, \t%%%d\n", r1, r2, reg);
+	    break;
+	case GEN_MUL: 
+	    printf("\tmul \t%%%d, \t%%%d, \t%%%d\n", r1, r2, reg);
+	    break;
+	case GEN_SUB: 
+	    printf("\tsub \t%%%d, \t%%%d, \t%%%d\n", r1, r2, reg);
+	    break;
+	case GEN_DIV: 
+	    printf("\tdiv \t%%%d, \t%%%d, \t%%%d\n", r1, r2, reg);
+	    break;
+	default:
+	    assert(0);
+    }
+    return reg;
+}
+
+fn genInitCode()
+{
+    printf("\t.text\n");
+    printf("\t.equ \tSP, \t1\n");
+    printf("\tload \t0, \t%%SP\n");
+    printf("\tsub \t1*8, \t%%SP, \t%%SP\n");
+    printf("\tcall \tmain, \t%%2\n");
+    printf("\tfetch \t(%%SP, 3), \t%%2\n");
+    genHalt(2);
+}
+
+fn genFuncDefBegin(name: -> readonly char)
+{
+    printf("// function %s\n", name);
+    printf("%s:", name);
+    printf("\tsub \t8, \t%%SP, \t%%SP\n");
+    printf("\tstore \t%%2, \t(%%SP, 3)\n");
+    printf("\t// begin of function body\n");
+}
+
+fn genFuncDefEnd()
+{
+    printf("\t// end of function body\n");
+    printf("\tfetch \t(%%SP, 3), \t%%2\n");
+    printf("\tadd \t8, \t%%SP, \t%%SP\n");
+    printf("\tret \t%%2\n");
+}
+
+fn genHalt(reg: GenReg)
+{
+    printf("\thalt\t%%%d\n", reg);
+}
+
+fn genReturn(val: GenReg)
+{
+    printf("\tstore\t%%%d,\t8(%%SP, 3)\n", val);
+}

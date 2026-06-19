@@ -1,3 +1,5 @@
+@ "string.hdr"
+
 enum TokenKind
 {
     BAD_TOKEN,
@@ -10,6 +12,8 @@ enum TokenKind
     CHARACTER_LITERAL,
     LPAREN,
     RPAREN,
+    MINUS,
+    SLASH,
 };
 
 type TokenVal: array[39] of char;
@@ -20,7 +24,7 @@ struct Token
     pos:	struct Pos {
 		    row, col: unsigned;
 		};
-    val:	TokenVal;
+    val:	String;
 };
 
 extern token: Token;

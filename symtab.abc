@@ -1,0 +1,113 @@
+@ <stdio.hdr>
+@ <stdlib.hdr>
+@ <string.hdr>
+
+@ "symtab.hdr"
+
+struct Node {
+    ident: String;
+    offset: int;
+    next: -> Node;
+};
+
+global globalVar, localVar: -> Node;
+
+fn isInList(list: -> readonly Node, ident: String): -> readonly Node
+{
+    if (list) {
+	if (strcmp(list->ident, ident) == 0) {
+	    return list;
+	} else {
+	    return isInList(list->next, ident);
+	}
+    } else {
+	return nullptr;
+    }
+}
+
+fn symtabIsDefined(ident: String): bool
+{
+    return isInList(localVar, ident) || isInList(globalVar, ident);
+}
+
+
+fn symtabGetInfo(ident: String, info: -> SymtabInfo): bool
+{
+    local n: -> readonly Node = isInList(localVar, ident);
+    if (n) {
+	info->isGlobal = false;
+	info->offset = n->offset;
+	return true;
+    }
+    n = isInList(globalVar, ident);
+    if (n) {
+	info->isGlobal = true;
+	return true;
+    }
+    return false;
+}
+
+fn symtabAddGlobal(ident: String): bool
+{
+    if (isInList(globalVar, ident)) {
+	return false;
+    }
+    local n: -> Node = malloc(sizeof(*n));
+    if (!n) {
+        printf("out of memory\n");
+        exit(1);
+    }
+    n->ident = ident;
+    n->next = globalVar;
+    globalVar = n;
+    return true;
+}
+
+fn symtabAddLocal(ident: String, offset: int): bool
+{
+    if (isInList(localVar, ident)) {
+	return false;
+    }
+    local n: -> Node = malloc(sizeof(*n));
+    if (!n) {
+        printf("out of memory\n");
+        exit(1);
+    }
+    n->ident = ident;
+    n->next = localVar;
+    n->offset = offset;
+    localVar = n;
+    return true;
+}
+
+fn freeList(list: -> Node)
+{
+    if (list) {
+        freeList(list->next);
+        free(list);
+    }
+}
+
+fn symtabFreeLocals()
+{
+    freeList(localVar);
+}
+
+
+fn symtabPrintGlobals()
+{
+    printf("\t.bss\n");
+    for (; globalVar; globalVar = globalVar->next) {
+	printf("\t.align 8\n");
+        printf("%s:\n", globalVar->ident);
+	printf("\t.quad\n");
+    }
+}
+
+fn symtabPrintLocals()
+{
+    for (; localVar; localVar = localVar->next) {
+        printf("localVar = %s, offset = %d\n",
+	    localVar->ident, localVar->offset);
+    }
+}

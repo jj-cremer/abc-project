@@ -1,0 +1,30 @@
+@ <stdio.hdr>
+
+@ "string.hdr"
+@ "symtab.hdr"
+
+fn checkInfo(ident: String) {
+    local info: SymtabInfo;
+    printf("%s is %sdefined\n", ident, symtabIsDefined(ident) ? "" : "not ");
+    if (symtabGetInfo(ident, &info)) {
+	printf("%s is %s\n", ident, info.isGlobal then "global" else "local");
+	if (!info.isGlobal) {
+	    printf("... with offset: %d\n", info.offset);
+	}
+    } else {
+	printf("unknown identifier %s\n", ident);
+    }
+}
+
+fn main()
+{
+    // add some global and local variables
+    symtabAddGlobal((String)"foo") || printf("error\n");
+    symtabAddLocal((String)"bar", -8) || printf("error\n");
+
+    checkInfo((String)"foo");
+    checkInfo((String)"bar");
+    checkInfo((String)"barx");
+}
+
+

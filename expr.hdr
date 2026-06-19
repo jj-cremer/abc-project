@@ -1,24 +1,34 @@
+@ "string.hdr"
+@ "gen.hdr"
+
 enum ExprKind
 {
-    EXPR_ADD,
+    EXPR_BINARY,
+    EXPR_ADD = EXPR_BINARY,
+    EXPR_DIV,
     EXPR_MUL,
+    EXPR_SUB,
+    EXPR_BINARY_END,
 
-    EXPR_INTEGER,
+    EXPR_PRIMARY = EXPR_BINARY_END,
+    EXPR_INTEGER = EXPR_PRIMARY,
+    EXPR_PRIMARY_END,
 };
 
 struct Expr
 {
     kind:		ExprKind;
     left, right:	->Expr;
-    decimal:		u64;
+    decimal:		String;
 };
 
 // constructors (caller becomes owner)
 extern fn createBinaryExpr(kind: ExprKind, left: ->Expr, right: ->Expr): -> Expr;
-extern fn createIntegerExpr(val: u64): ->Expr;
+extern fn createIntegerExpr(val: String): ->Expr;
 
 // destructer
 extern fn releaseExpr(expr: ->Expr);
 
 // meothods
 extern fn printExprTree(expr: ->Expr);
+extern fn loadExpr(expr: ->Expr): GenReg;

@@ -19,3 +19,48 @@ R_R_R       (OP u 8) (z u 4) (y u 4) (x u 4)
 0x17 R_R_R
 :   mul %x, %y, %z
     ulm_mul64(ulm_regVal(x), ulm_regVal(y), z);
+
+
+##
+## new in session 17
+##
+
+U20_R		(OP u 8) (dest u 4) (imm s 20)
+R	(OP u 8) (x u 4)
+MR_R	(OP u 8) (data u 4) (addr u 4) (size u 2) (offset s 14)
+R_MR	(OP u 8) (data u 4) (addr u 4) (size u 2) (offset s 14)
+U16_R_R		(OP u 8) (z u 4) (y u 4) (imm u 16)
+
+0x20 R_R_R
+:   sub %x, %y, %z
+    ulm_sub64(ulm_regVal(x), ulm_regVal(y), z);
+
+0x21 R_R_R
+:   div %x, %y, %z
+    ulm_idiv64(ulm_regVal(x), ulm_regVal(y), z);
+
+0x22 U16_R_R
+:   add imm, %y, %z
+    ulm_add64(imm, ulm_regVal(y), z);
+
+0x23 U16_R_R
+:   sub imm, %y, %z
+    ulm_sub64(imm, ulm_regVal(y), z);
+
+0x24	U20_R
+:   call	imm, %dest
+    ulm_absJump(imm, dest);
+
+0x25 R
+:   ret    %x
+    ulm_absJump(ulm_regVal(x), x);
+
+0x26 MR_R
+:   fetch    offset(%addr, size), %data
+:   fetch    (%addr, size), %data
+    ulm_fetch64(offset, addr, 0, 1, ULM_ZERO_EXT, 1 << size, data);
+
+0x27 R_MR
+:   store    %data, offset(%addr, size)
+:   store    %data, (%addr, size)
+    ulm_store64(offset, addr, 0, 0, 1 << size, data);

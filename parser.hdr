@@ -1,2 +1,4 @@
-extern fn parseExpr(): int;
+@ "expr.hdr"
+
+extern fn parseExpr(): -> Expr;
 

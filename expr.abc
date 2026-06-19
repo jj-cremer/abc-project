@@ -13,7 +13,7 @@ fn createBinaryExpr(kind: ExprKind, left: ->Expr, right: ->Expr): ->Expr
     return n;
 }
 
-fn createIntegerExpr(val: u64): ->Expr
+fn createIntegerExpr(val: String): ->Expr
 {
     local n: -> Expr = malloc(sizeof(*n));
     assert(n);
@@ -22,11 +22,25 @@ fn createIntegerExpr(val: u64): ->Expr
     return n;
 }
 
+fn genInstrFromExprKind(exprKind: ExprKind): GenInstr
+{
+    switch (exprKind) {
+	case EXPR_ADD: return GEN_ADD;
+	case EXPR_SUB: return GEN_SUB;
+	case EXPR_MUL: return GEN_MUL;
+	case EXPR_DIV: return GEN_DIV;
+	default:
+	    assert(0 && "internal error: genInstrFromInstrKind");
+	    return -1;
+	
+    }
+}
+
 fn releaseExpr(expr: ->Expr)
 {
     if (expr->kind == EXPR_INTEGER) {
 	free(expr);
-    } else if (expr->kind >= EXPR_ADD && expr->kind <= EXPR_MUL) {
+    } else if (expr->kind >= EXPR_BINARY && expr->kind < EXPR_BINARY_END) {
 	free(expr->left);
 	free(expr->right);
 	free(expr);
@@ -36,16 +50,36 @@ fn releaseExpr(expr: ->Expr)
 fn printExprTree(expr: ->Expr)
 {
     if (expr->kind == EXPR_INTEGER) {
-	printf(" [ %llu ]", expr->decimal);
-    } else if (expr->kind >= EXPR_ADD && expr->kind <= EXPR_MUL) {
+	printf(" [ %s ]", expr->decimal);
+    } else if (expr->kind >= EXPR_BINARY && expr->kind < EXPR_BINARY_END) {
 	printf(" [ ");
 	switch (expr->kind) {
 	    case EXPR_ADD: printf("+"); break;
 	    case EXPR_MUL: printf("*"); break;
+	    case EXPR_DIV: printf("/"); break;
+	    case EXPR_SUB: printf("-"); break;
 	    default: assert(0);
 	}
 	printExprTree(expr->left);
 	printExprTree(expr->right);
 	printf("] ");
+    }
+}
+
+fn loadExpr(expr: ->Expr): GenReg
+{
+    if (expr->kind == EXPR_INTEGER) {
+	return genConstant(expr->decimal);
+    } else if (expr->kind >= EXPR_BINARY && expr->kind < EXPR_BINARY_END) {
+	local left: GenReg = loadExpr(expr->left);
+	local right: GenReg = loadExpr(expr->right);
+	genReleaseReg(left);
+	genReleaseReg(right);
+
+	local op : GenInstr = genInstrFromExprKind(expr->kind);
+	return genInstr(op, right, left);
+    } else {
+	assert(0 && "loadExpr: not all cases handled!");
+	return genConstant("0");
     }
 }

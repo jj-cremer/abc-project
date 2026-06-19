@@ -5,14 +5,15 @@ fn main()
 {
     local expr: -> Expr;
 
-    expr = createBinaryExpr(EXPR_ADD,
-	createBinaryExpr(EXPR_MUL, 
-	    createIntegerExpr(2),
-	    createIntegerExpr(3)),
-	createIntegerExpr(4));
+    expr = createBinaryExpr(EXPR_SUB,
+	createBinaryExpr(EXPR_DIV, 
+	    createIntegerExpr((String)"2"),
+	    createIntegerExpr((String)"3")),
+	createIntegerExpr(String"4"));
 
     printExprTree(expr);
     printf("\n");
 
+    genReleaseReg(loadExpr(expr));
     releaseExpr(expr);
 }

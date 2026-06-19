@@ -6,11 +6,19 @@
 
 fn main()
 {
+    genInitCode();
+    genFuncDefBegin("main");
     getToken();
-    local reg: int = parseExpr();
-    if (reg < 0) {
-        printf("syntax error\n");
-        assert(0);
+    local expr: -> Expr = parseExpr();
+    if (expr && token.kind == EOI) {
+	printf("// expr: ");
+	printExprTree(expr);
+	printf("\n");
+	loadExpr(expr);
+	
+    } else {
+	printf("syntax error\n");
     }
-    printf("\thalt %%%d\n", reg);
+    genReturn(2);
+    genFuncDefEnd();
 }
