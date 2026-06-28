@@ -14,6 +14,8 @@ enum TokenKind
     RPAREN,
     MINUS,
     SLASH,
+    EQUAL,
+    SEMICOLON,
 };
 
 type TokenVal: array[39] of char;

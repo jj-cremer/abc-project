@@ -10,10 +10,12 @@ fn main()
 	    createIntegerExpr((String)"2"),
 	    createIntegerExpr((String)"3")),
 	createIntegerExpr(String"4"));
+    expr = createBinaryExpr(EXPR_ASSIGN,
+	createIdentifierExpr((String)"x"), expr);
 
     printExprTree(expr);
     printf("\n");
 
-    genReleaseReg(loadExpr(expr));
+    //genReleaseReg(loadExpr(expr));
     releaseExpr(expr);
 }

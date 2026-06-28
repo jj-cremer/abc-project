@@ -8,10 +8,12 @@ enum ExprKind
     EXPR_DIV,
     EXPR_MUL,
     EXPR_SUB,
+    EXPR_ASSIGN,
     EXPR_BINARY_END,
 
     EXPR_PRIMARY = EXPR_BINARY_END,
     EXPR_INTEGER = EXPR_PRIMARY,
+    EXPR_IDENTIFIER,
     EXPR_PRIMARY_END,
 };
 
@@ -20,11 +22,13 @@ struct Expr
     kind:		ExprKind;
     left, right:	->Expr;
     decimal:		String;
+    identifier:		String;
 };
 
 // constructors (caller becomes owner)
 extern fn createBinaryExpr(kind: ExprKind, left: ->Expr, right: ->Expr): -> Expr;
 extern fn createIntegerExpr(val: String): ->Expr;
+extern fn createIdentifierExpr(val: String): ->Expr;
 
 // destructer
 extern fn releaseExpr(expr: ->Expr);

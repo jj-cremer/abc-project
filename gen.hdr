@@ -13,11 +13,16 @@ enum GenInstr
 };
 
 // we need to be carefull with the order soon
-extern fn genInstr(instr: GenInstr, left: GenReg, right: GenReg): GenReg;
+extern fn genInstr(op: GenInstr, r1: GenReg, r2: GenReg): GenReg;
 
 extern fn genInitCode();
 extern fn genFuncDefBegin(name: -> readonly char);
 extern fn genFuncDefEnd();
 extern fn genHalt(exitCode: GenReg);
 extern fn genReturn(retVal: GenReg);
+
+extern fn genFetch(addr: GenReg): GenReg;
+extern fn genStore(val: GenReg, addr: GenReg);
+extern fn genLoadAddr(ident: -> readonly char): GenReg;
+extern fn genLoadVar(ident: -> readonly char): GenReg;
 

@@ -22,6 +22,16 @@ fn createIntegerExpr(val: String): ->Expr
     return n;
 }
 
+fn createIdentifierExpr(val: String): ->Expr
+{
+    local n: -> Expr = malloc(sizeof(*n));
+    assert(n);
+    n->kind = EXPR_IDENTIFIER;
+    n->identifier = val;
+    return n;
+}
+
+
 fn genInstrFromExprKind(exprKind: ExprKind): GenInstr
 {
     switch (exprKind) {
@@ -49,8 +59,12 @@ fn releaseExpr(expr: ->Expr)
 
 fn printExprTree(expr: ->Expr)
 {
-    if (expr->kind == EXPR_INTEGER) {
-	printf(" [ %s ]", expr->decimal);
+    if (expr->kind >= EXPR_PRIMARY && expr->kind < EXPR_PRIMARY_END) {
+	switch (expr->kind) {
+	    case EXPR_INTEGER: printf(" [ %s ]", expr->decimal); break;
+	    case EXPR_IDENTIFIER: printf(" [ %s ]", expr->identifier); break;
+	    default: assert(0);
+	}
     } else if (expr->kind >= EXPR_BINARY && expr->kind < EXPR_BINARY_END) {
 	printf(" [ ");
 	switch (expr->kind) {
@@ -58,26 +72,46 @@ fn printExprTree(expr: ->Expr)
 	    case EXPR_MUL: printf("*"); break;
 	    case EXPR_DIV: printf("/"); break;
 	    case EXPR_SUB: printf("-"); break;
+	    case EXPR_ASSIGN: printf("{=}"); break;
 	    default: assert(0);
 	}
 	printExprTree(expr->left);
 	printExprTree(expr->right);
 	printf("] ");
+    } else {
+	assert(0);
     }
+}
+
+fn loadExprAddress(expr: ->Expr): GenReg
+{
+    assert(expr->kind == EXPR_IDENTIFIER && "not an lvalue (left value)");
+    return genLoadAddr(expr->identifier);
 }
 
 fn loadExpr(expr: ->Expr): GenReg
 {
     if (expr->kind == EXPR_INTEGER) {
 	return genConstant(expr->decimal);
+    } else if (expr->kind == EXPR_IDENTIFIER) {
+	return genLoadVar(expr->identifier);
     } else if (expr->kind >= EXPR_BINARY && expr->kind < EXPR_BINARY_END) {
-	local left: GenReg = loadExpr(expr->left);
-	local right: GenReg = loadExpr(expr->right);
-	genReleaseReg(left);
-	genReleaseReg(right);
+	if (expr->kind == EXPR_ASSIGN) {
+	    local right: GenReg = loadExpr(expr->right);
+	    local left: GenReg = loadExprAddress(expr->left);
+	    genReleaseReg(left);
+	    genStore(right, left);
 
-	local op : GenInstr = genInstrFromExprKind(expr->kind);
-	return genInstr(op, right, left);
+	    return right;
+	} else {
+	    local left: GenReg = loadExpr(expr->left);
+	    local right: GenReg = loadExpr(expr->right);
+	    genReleaseReg(left);
+	    genReleaseReg(right);
+
+	    local op: GenInstr = genInstrFromExprKind(expr->kind);
+	    return genInstr(op, right, left);
+	}
     } else {
 	assert(0 && "loadExpr: not all cases handled!");
 	return genConstant("0");

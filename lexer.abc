@@ -101,6 +101,12 @@ fn getToken(): TokenKind
         return token.kind = RPAREN;
     } else if (ch == EOF) {
         return token.kind = EOI;
+    } else if (ch == '=') {
+	nextCh();
+	return token.kind = EQUAL;
+    } else if (ch == ';') {
+	nextCh();
+	return token.kind = SEMICOLON;
     } else {
 	nextCh();
 	return token.kind = BAD_TOKEN;
@@ -123,5 +129,7 @@ fn tokenKindStr(token: Token): -> char
         case RPAREN: return "RPAREN";
         case MINUS: return "MINUS";
         case SLASH: return "SLASH";
+        case SEMICOLON: return "SEMICOLON";
+        case EQUAL: return "EQUAL";
     }
 }

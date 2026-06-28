@@ -4,10 +4,32 @@
 @ "gen.hdr"
 
 
+fn parseAdditive(): -> Expr;
 fn parseTerm(): -> Expr;
 fn parseFactor(): -> Expr;
 
 fn parseExpr(): -> Expr
+{
+    local left: -> Expr = parseAdditive();
+    if (!left) {
+        return nullptr;
+    }
+    while (token.kind == EQUAL) {
+	local tok: Token = token;
+        getToken();
+        local right: -> Expr = parseExpr();
+        if (!right) {
+            printf("%u.%u expected additive expression\n",
+                   token.pos.row, token.pos.col);
+            assert(0);
+        }
+	local exprKind: ExprKind = EXPR_ASSIGN;
+        left = createBinaryExpr(exprKind, left, right);
+    }
+    return left;
+}
+
+fn parseAdditive(): -> Expr
 {
     local left: -> Expr = parseTerm();
     if (!left) {
@@ -70,6 +92,10 @@ fn parseFactor(): -> Expr
         }
         getToken();
         return reg;
+    } else if (token.kind == IDENTIFIER) {
+	local expr: -> Expr = createIdentifierExpr(token.val);
+	getToken();
+	return expr;
     } else {
         return nullptr;
     }

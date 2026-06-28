@@ -1,0 +1,35 @@
+@ <stdio.hdr>
+@ "lexer.hdr"
+@ "parser.hdr"
+@ "gen.hdr"
+@ "symtab.hdr"
+
+
+fn main()
+{
+    symtabAddGlobal((String)"x");
+    symtabAddGlobal((String)"y");
+    symtabAddGlobal((String)"z");
+    genInitCode();
+    genFuncDefBegin("main");
+    getToken();
+    while (true) {
+	local expr: -> Expr = parseExpr();
+	if (!expr) {
+	    break;
+	}
+	if (token.kind != SEMICOLON) {
+	    printf("%u.%u: ';' expected\n", token.pos.row, token.pos.col);
+	    break;
+	}
+	getToken();
+	printf("\t// expr: ");
+	printExprTree(expr);
+	printf("\n");
+	genReleaseReg(loadExpr(expr));
+	releaseExpr(expr);
+    }
+    genReturn(2);
+    genFuncDefEnd();
+    symtabPrintGlobals();
+}

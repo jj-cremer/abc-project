@@ -1,0 +1,9 @@
+@ "gen.hdr"
+
+fn main()
+{
+    // x = y
+    local addrX: GenReg = genLoadAddr("x");
+    local valY: GenReg = genLoadVar("y");
+    genStore(valY, addrX);
+}

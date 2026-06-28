@@ -29,6 +29,35 @@ fn genConstant(val: -> char): GenReg
     return reg;
 }
 
+fn genFetch(addr: GenReg): GenReg
+{
+    local dest: GenReg = getReg();
+    printf("\tfetch\t(%%%d, 3),\t%%%d\n", addr, dest);
+    return dest;
+}
+
+fn genStore(val: GenReg, addr: GenReg)
+{
+    printf("\tstore\t%%%d,\t(%%%d, 3)\n", val, addr);
+}
+
+fn genLoadAddr(ident: -> readonly char): GenReg
+{
+    printf("\t//load address of global variable %s\n", ident);
+    local dest: GenReg = getReg();
+    printf("\tload\t%s,\t%%%d\n", ident, dest);
+    return dest;
+}
+
+fn genLoadVar(ident: -> readonly char): GenReg
+{
+    printf("\t//load address of global variable %s in two steps\n", ident);
+    local dest: GenReg = genLoadAddr(ident);
+    genReleaseReg(dest);
+    printf("\t//now fetch value from this address and reuse register\n");
+    return genFetch(dest);
+}
+
 fn genInstr(op: GenInstr, r1: GenReg, r2: GenReg): GenReg
 {
     local reg: GenReg = getReg();
@@ -87,4 +116,5 @@ fn genHalt(reg: GenReg)
 fn genReturn(val: GenReg)
 {
     printf("\tstore\t%%%d,\t8(%%SP, 3)\n", val);
+    printf("\tfetch \t(%%SP, 3), \t%%2\n");
 }
